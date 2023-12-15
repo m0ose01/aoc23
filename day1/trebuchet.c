@@ -6,8 +6,12 @@
 int get_first_digit(int *digit, char *line);
 int get_last_digit(int *digit, char *line);
 
+char *digits_alpha[] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+
+int digits_numeric[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
 int main(int argc, char * argv[])
-{
+{	
 	if (argc != 2)
 	{
 		printf("Usage: ./trebuchet input.txt\n");
@@ -65,9 +69,7 @@ int main(int argc, char * argv[])
 		}
 
 	}
-	
 	printf("%i\n", total);
-
 }
 
 int get_first_digit(int *digit, char *line)
@@ -75,13 +77,23 @@ int get_first_digit(int *digit, char *line)
 	int ans;
 	for (int i = 0, n = strlen(line); i < n; i++)
 	{
-		if (line[i] < 48 || line[i] > 57)
+		if (line[i] >= 48 && line[i] <= 57)
 		{
-			continue;
+			ans = line[i] - 48;
+			*digit = ans;
+			return 0;
 		}
-		ans = line[i] - 48;
-		*digit = ans;
-		return 0;
+
+		for (int current_digit = 0; current_digit < 10; current_digit++)
+		{	
+       			int digit_length = strlen(digits_alpha[current_digit]);
+			if (strncmp(&line[i], digits_alpha[current_digit], digit_length) == 0)
+			{	
+				ans = digits_numeric[current_digit];
+				*digit = ans;
+				return 0;
+			}
+		}
 	}
 	return 1;
 }
@@ -91,13 +103,23 @@ int get_last_digit(int *digit, char *line)
 	int ans;
 	for (int i = 0, n = strlen(line); i < n + 1; i++)
 	{
-		if (line[n - i] < 48 || line[n - i] > 57)
+		if (line[n - i] >= 48 && line[n - i] <= 57)
 		{
-			continue;
+			ans = line[n - i] - 48;
+			*digit = ans;
+			return 0;
 		}
-		ans = line[n - i] - 48;
-		*digit = ans;
-		return 0;
+
+		for (int current_digit = 0; current_digit < 10; current_digit++)
+		{	
+       			int digit_length = strlen(digits_alpha[current_digit]);
+			if (strncmp(&line[n - i], digits_alpha[current_digit], digit_length) == 0)
+			{	
+				ans = digits_numeric[current_digit];
+				*digit = ans;
+				return 0;
+			}
+		}
 	}
 	return 1;
 }
