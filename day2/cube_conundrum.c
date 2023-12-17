@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CHECK_POSSIBLE 0
+#define GET_POWER 1
+
 typedef struct
 	 {
 	int red;
@@ -9,7 +12,9 @@ typedef struct
 	int blue;
 } bag_contents;
 
-int is_possible(char *line, bag_contents *total);
+int parse_game(char *game, bag_contents *current_bag, int action);
+int check_possible(char *substring, bag_contents *bag_maximum);
+void update_max(char *substring, bag_contents *current_max);
 
 int main(int argc, char *argv[])
 {
@@ -42,9 +47,11 @@ int main(int argc, char *argv[])
 
 	bag_contents current_bag = {12, 13, 14};
 
+	int action = GET_POWER;
+
 	while (fgets(buffer, MAX_LINELENGTH, input_file) != NULL)
-	{
-		int result = is_possible(buffer, &current_bag) * line_number;
+	{	
+		int result = parse_game(buffer, &current_bag, action) * line_number;
 		total += result;
 
 		free(buffer);
@@ -56,7 +63,10 @@ int main(int argc, char *argv[])
 			return 3;
 		}
 		
-		line_number++;
+		if (action == CHECK_POSSIBLE)
+		{
+			line_number++;
+		}
 	}
 	free(buffer);
 	fclose(input_file);
@@ -64,12 +74,12 @@ int main(int argc, char *argv[])
 	printf("%i\n", total);
 }
 
-int is_possible(char *game, bag_contents *current_bag)
+int parse_game(char *game, bag_contents *current_bag, int action)
 {	
-	char game_copy[strlen(game)];
-	strcpy(game_copy, game);
+	bag_contents max = {0, 0, 0};
+
 	char *colon_substring_last;
-	char *colon_substring = strtok_r(game_copy, ":", &colon_substring_last);
+	char *colon_substring = strtok_r(game, ":", &colon_substring_last);
 	while (colon_substring != NULL)
 	{
 		char *semicolon_substring_last;
@@ -79,40 +89,73 @@ int is_possible(char *game, bag_contents *current_bag)
 			char *comma_substring_last;
 			char *comma_substring = strtok_r(semicolon_substring, ",", &comma_substring_last);
 			while (comma_substring != NULL)
-			{
-				char *space_substring_last;
-				char *space_substring = strtok_r(comma_substring, " ", &space_substring_last);
-				if (space_substring == NULL)
+			{	
+				if (action == CHECK_POSSIBLE)
 				{
-					break;
+					if (check_possible(comma_substring, current_bag) == 0)
+					{
+						return 0;
+					}
 				}
-				int cube_count = atoi(space_substring);
-
-
-				char * colour = strtok_r(NULL, " ", &space_substring_last);
-				if (colour == NULL)
+				if (action == GET_POWER)
 				{
-					continue;
+					update_max(comma_substring, &max);
 				}
-
-				if (strncmp(colour, "red", 3) == 0 && cube_count > current_bag->red)
-				{
-					return 0;
-				}
-				else if (strncmp(colour, "green", 5) == 0 && cube_count > current_bag->green)
-				{
-					return 0;
-				}
-				else if (strncmp(colour, "blue", 4) == 0 && cube_count > current_bag->blue)
-				{
-					return 0;
-				}
-
 				comma_substring = strtok_r(NULL, ",", &comma_substring_last);
+
 			}
 			semicolon_substring = strtok_r(NULL, ";", &semicolon_substring_last);
 		}
 		colon_substring = strtok_r(NULL, ":", &colon_substring_last);
 	}
+	if (action == GET_POWER)
+	{
+		return (max.red * max.green * max.blue);
+	}
 	return 1;
+}
+
+int check_possible(char *substring, bag_contents *bag_maximum)
+{
+	char *number_string_last;
+	char *number_string = strtok_r(substring, " ", &number_string_last);
+
+	char * colour = strtok_r(NULL, " ", &number_string_last);
+	int cube_count = atoi(number_string);
+
+	if (strncmp(colour, "red", 3) == 0 && cube_count > bag_maximum->red)
+	{
+		return 0;
+	}
+	else if (strncmp(colour, "green", 5) == 0 && cube_count > bag_maximum->green)
+	{
+		return 0;
+	}
+	else if (strncmp(colour, "blue", 4) == 0 && cube_count > bag_maximum->blue)
+	{
+		return 0;
+	}
+	return 1;
+}
+
+void update_max(char *substring, bag_contents *current_max)
+{
+	char *number_string_last;
+	char *number_string = strtok_r(substring, " ", &number_string_last);
+
+	char * colour = strtok_r(NULL, " ", &number_string_last);
+	int cube_count = atoi(number_string);
+
+	if (strncmp(colour, "red", 3) == 0 && cube_count > current_max->red)
+	{
+		current_max->red = cube_count;
+	}
+	else if (strncmp(colour, "green", 5) == 0 && cube_count > current_max->green)
+	{
+		current_max->green= cube_count;
+	}
+	else if (strncmp(colour, "blue", 4) == 0 && cube_count > current_max->blue)
+	{
+		current_max->blue = cube_count;
+	}
 }
